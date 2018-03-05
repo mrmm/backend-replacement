@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: huey-consumer
+  labels:
+    app: forkdelta
+    component: huey-consumer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: forkdelta
+      component: huey-consumer
+  template:
+    metadata:
+      labels:
+        app: forkdelta
+        component: huey-consumer
+    spec:
+      containers:
+      - name: huey-consumer
+        image: quay.io/forkdelta/backend:master
+        env:
+        - name: COMPONENT
+          value: "huey_consumer"
+        - name: HUEY_CONCURRENCY
+          value: 3
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: postgres-creds
+              key: database
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-creds
+              key: username
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-creds
+              key: password
+        - name: HTTP_PROVIDER
+          valueFrom:
+            configMapKeyRef:
+              name: forkdelta-config
+              key: http-provider

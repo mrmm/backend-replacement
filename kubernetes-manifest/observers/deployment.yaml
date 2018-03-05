@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: observers
+  labels:
+    app: forkdelta
+    component: observers
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: forkdelta
+      component: observers
+  template:
+    metadata:
+      labels:
+        app: forkdelta
+        component: observers
+    spec:
+      containers:
+      - name: contract-observer
+        image: quay.io/forkdelta/backend:master
+        env:
+        - name: COMPONENT
+          value: "contract_observer"
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: postgres-creds
+              key: database
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-creds
+              key: username
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-creds
+              key: password
+        - name: HTTP_PROVIDER
+          valueFrom:
+            configMapKeyRef:
+              name: forkdelta-config
+              key: http-provider
+      - name: etherdelta-observer
+        image: quay.io/forkdelta/backend:master
+        env:
+        - name: COMPONENT
+          value: "etherdelta_observer"
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: postgres-creds
+              key: database
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-creds
+              key: username
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-creds
+              key: password
+        - name: HTTP_PROVIDER
+          valueFrom:
+            configMapKeyRef:
+              name: forkdelta-config
+              key: http-provider
+        - name: WS_PROVIDER
+          valueFrom:
+            configMapKeyRef:
+              name: forkdelta-config
+              key: http-provider

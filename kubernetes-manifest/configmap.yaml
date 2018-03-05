@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: forkdelta-config
+data:
+  http-provider: http://138.197.160.134:8545/
+  ws-provider: ws://138.197.160.134:8546/
+  db-revision: head

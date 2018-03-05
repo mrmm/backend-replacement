@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: websocket-server
+  labels:
+    app: forkdelta
+    component: websocket
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: forkdelta
+      component: websocket
+  template:
+    metadata:
+      labels:
+        app: forkdelta
+        component: websocket
+    spec:
+      containers:
+      - name: websocket
+        image: quay.io/forkdelta/backend:master
+        ports:
+        - containerPort: 8080
+          name: ws
+        env:
+        - name: COMPONENT
+          value: "websocket"
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: postgres-creds
+              key: database
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-creds
+              key: username
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-creds
+              key: password
+        - name: HTTP_PROVIDER
+          valueFrom:
+            configMapKeyRef:
+              name: forkdelta-config
+              key: http-provider
+#        - name: WS_PROVIDER
+#          valueFrom:
+#            configMapKeyRef:
+#              name: forkdelta-config
+#              key: http-provider

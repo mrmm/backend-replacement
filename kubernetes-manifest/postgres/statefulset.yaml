@@ -1,0 +1,88 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-svc
+  labels:
+    app: postgres
+spec:
+  ports:
+  - port: 5432
+    name: db
+  clusterIP: None
+  selector:
+    app: postgres
+--
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-db
+spec:
+  selector:
+    matchLabels:
+      app: postgres
+  serviceName: "int-postgres"
+  replicas: 1 # by default is 1
+  template:
+    metadata:
+      labels:
+        app: postgres # has to match .spec.selector.matchLabels
+      annotations:
+        pod.beta.kubernetes.io/init-containers: '[
+          {
+            "name": "migrate-db",
+            "image": "quay.io/forkdelta/backend:master",
+            "env": [
+              {
+                "name": "COMPONENT",
+                "value": "contract_observer"
+              },
+              {
+                "name": "POSTGRES_DB",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "name": "postgres-creds",
+                    "key": "database"
+                  }
+                }
+              },
+              {
+                "name": "POSTGRES_USER",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "name": "postgres-creds",
+                    "key": "username"
+                  }
+                }
+              },
+              {
+                "name": "POSTGRES_PASSWORD",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "name": "postgres-creds",
+                    "key": "password"
+                  }
+                }
+              }
+            ]
+          }
+        ]'
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: postgres
+        image: k8s.gcr.io/nginx-slim:0.8
+        ports:
+        - containerPort: 5432
+          name: db
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "default"
+      resources:
+        requests:
+          storage: 20Gi # TODO needed storage size should be verified
